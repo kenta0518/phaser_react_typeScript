@@ -1,5 +1,13 @@
-# ベースイメージを指定
-FROM node:18
+# ベースイメージを指定（Node.jsの最新安定バージョンを使用）
+FROM node:22-slim
+
+# 必要なパッケージをインストール
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 最新のnpmをインストール
+RUN npm install -g npm@latest
 
 # 作業ディレクトリを設定
 WORKDIR /app
@@ -7,14 +15,17 @@ WORKDIR /app
 # package.json と package-lock.json をコピー
 COPY package*.json ./
 
-# 依存パッケージをインストール
+# Remixプロジェクトの依存パッケージをインストール
 RUN npm install
 
 # ソースコードをコンテナにコピー
 COPY . .
 
-# ポートを公開 (デフォルトで Vite が使うポート)
+# ポートを公開 (Remixのデフォルトポート)
 EXPOSE 3000
 
-# 開発モードで起動
+# Buildステップを実行（本番環境用）
+RUN npm run build
+
+# 開発モードで起動 (開発中に利用)
 CMD ["npm", "run", "dev"]
